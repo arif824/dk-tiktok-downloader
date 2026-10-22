@@ -1,0 +1,115 @@
+const API_BASE = "https://tdownv4.sl-bjs.workers.dev/";
+
+export async function onRequestPost({ request }) {
+  const corsHeaders = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  };
+
+  try {
+    const body = await request.json();
+    const videoUrl = String(body.url || "").trim();
+
+    if (!videoUrl || videoUrl.length > 2048) {
+      return Response.json(
+        { ok: false, error: "TikTok লিংক দিন।" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(videoUrl);
+    } catch {
+      return Response.json(
+        { ok: false, error: "লিংকটি সঠিক নয়।" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    const allowed =
+      host === "tiktok.com" ||
+      host.endsWith(".tiktok.com");
+
+    if (parsed.protocol !== "https:" || !allowed) {
+      return Response.json(
+        { ok: false, error: "শুধু HTTPS TikTok লিংক ব্যবহার করুন।" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const endpoint = new URL(API_BASE);
+    endpoint.searchParams.set("down", videoUrl);
+
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal: AbortSignal.timeout(20000)
+    });
+
+    if (!response.ok) {
+      return Response.json(
+        {
+          ok: false,
+          error: `ডাউনলোড API উত্তর দিয়েছে: HTTP ${response.status}`
+        },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    const data = await response.json();
+
+    const downloadUrl =
+      data.download_url ||
+      data.data?.download_url ||
+      data.data?.play ||
+      data.play;
+
+    if (!downloadUrl) {
+      return Response.json(
+        {
+          ok: false,
+          error: "API ভিডিওর ডাউনলোড লিংক দেয়নি। অন্য লিংক দিয়ে পরীক্ষা করুন।"
+        },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    let media;
+    try {
+      media = new URL(downloadUrl);
+    } catch {
+      return Response.json(
+        { ok: false, error: "API থেকে অকার্যকর ভিডিও লিংক এসেছে।" },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    if (media.protocol !== "https:") {
+      return Response.json(
+        { ok: false, error: "ভিডিও লিংক নিরাপদ HTTPS নয়।" },
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
+    return Response.json(
+      {
+        ok: true,
+        title: String(data.title || "TikTok ভিডিও"),
+        downloadUrl: media.toString()
+      },
+      { headers: corsHeaders }
+    );
+  } catch (error) {
+    return Response.json(
+      {
+        ok: false,
+        error: error.name === "TimeoutError"
+          ? "API উত্তর দিতে দেরি করছে। পরে আবার চেষ্টা করুন।"
+          : "API কাজ করেনি বা তার উত্তর বোঝা যায়নি।"
+      },
+      { status: 502, headers: corsHeaders }
+    );
+  }
+}
