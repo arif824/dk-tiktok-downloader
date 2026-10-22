@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DK TikTok Downloader</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f4f8;
+      color: #202124;
+    }
+    header {
+      background: #111;
+      color: white;
+      padding: 22px 12px;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 25px; }
+    header p { margin-bottom: 0; color: #ddd; }
+    .container {
+      max-width: 480px;
+      margin: 35px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px #00000012;
+    }
+    .logo {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    h2 { text-align: center; }
+    .desc {
+      text-align: center;
+      color: #666;
+      line-height: 1.6;
+    }
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 9px;
+      font-size: 15px;
+      margin: 15px 0 10px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 9px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .download {
+      background: #fe2c55;
+      color: white;
+    }
+    .open {
+      background: #222;
+      color: white;
+    }
+    #message {
+      text-align: center;
+      margin-top: 15px;
+      overflow-wrap: anywhere;
+    }
+    footer {
+      text-align: center;
+      color: #777;
+      font-size: 13px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>DK TikTok Downloader</h1>
+  <p>সহজেই TikTok ভিডিও ডাউনলোড করুন</p>
+</header>
+
+<div class="container">
+  <div class="logo">♪</div>
+  <h2>TikTok Video Downloader</h2>
+  <p class="desc">
+    TikTok ভিডিওর লিংক নিচে পেস্ট করুন।
+    তারপর Download Video বাটনে চাপ দিন।
+  </p>
+
+  <input
+    type="url"
+    id="videoUrl"
+    placeholder="এখানে TikTok ভিডিওর লিংক দিন"
+    autocomplete="url"
+  >
+
+  <button class="download" onclick="downloadVideo()">
+    ⬇ Download Video
+  </button>
+
+  <button class="open" onclick="openVideo()">
+    TikTok ভিডিও খুলুন
+  </button>
+
+  <p id="message" role="status"></p>
+</div>
+
+<footer>
+  © 2026 DK TikTok Downloader
+  <p>শুধু অনুমতিপ্রাপ্ত ভিডিও ডাউনলোড করুন।</p>
+</footer>
+
+<script>
+  function getTikTokUrl() {
+    const input = document.getElementById("videoUrl");
+    const message = document.getElementById("message");
+    const value = input.value.trim();
+
+    try {
+      const url = new URL(value);
+
+      if (
+        url.protocol !== "https:" ||
+        !/(^|\.)tiktok\.com$/i.test(url.hostname)
+      ) {
+        throw new Error("invalid");
+      }
+
+      return url.href;
+    } catch {
+      message.textContent =
+        "সঠিক TikTok ভিডিও লিংক পেস্ট করুন।";
+      return null;
+    }
+  }
+
+  function openVideo() {
+    const url = getTikTokUrl();
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function downloadVideo() {
+    const url = getTikTokUrl();
+    if (!url) return;
+
+    const message = document.getElementById("message");
+    message.textContent =
+      "ডাউনলোড সার্ভার এখনো সংযুক্ত করা হয়নি।";
+
+    /*
+      সার্ভার তৈরি হলে এখানে API যুক্ত করুন।
+      উদাহরণ:
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+    */
+  }
+</script>
+
+</body>
+</html>
