@@ -145,24 +145,43 @@
     if (url) window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  async function downloadVideo() {
-    const url = getTikTokUrl();
-    if (!url) return;
+  
+const message = document.getElementById("message");
+message.textContent = "ভিডিওর লিংক পরীক্ষা করা হচ্ছে…";
 
-    const message = document.getElementById("message");
-    message.textContent =
-      "ডাউনলোড সার্ভার এখনো সংযুক্ত করা হয়নি।";
+try {
+  const response = await fetch("/api/download", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ url })
+  });
 
-    /*
-      সার্ভার তৈরি হলে এখানে API যুক্ত করুন।
-      উদাহরণ:
-      const response = await fetch("/api/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-      });
-    */
+  const result = await response.json();
+
+  if (!response.ok || !result.ok || !result.downloadUrl) {
+    throw new Error(
+      result.error || "ভিডিও ডাউনলোড লিংক পাওয়া যায়নি।"
+    );
   }
+
+  const link = document.createElement("a");
+  link.href = result.downloadUrl;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = "ভিডিও খুলুন / ডাউনলোড করুন";
+  link.style.display = "block";
+  link.style.marginTop = "12px";
+
+  message.textContent = "API লিংক পেয়েছে। নিচের লিংকে চাপুন:";
+  message.appendChild(link);
+
+} catch (error) {
+  message.textContent =
+    "ডাউনলোড ব্যর্থ: " + error.message;
+}
+
 </script>
 
 </body>
